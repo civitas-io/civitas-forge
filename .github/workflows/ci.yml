@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test (${{ matrix.package }}, Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [fabrica]
+        python-version: ["3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --package ${{ matrix.package }} --extra dev
+        working-directory: .
+
+      - name: Run tests
+        run: uv run --package ${{ matrix.package }} pytest packages/${{ matrix.package }}/tests -v
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dev dependencies
+        run: uv sync
+
+      - name: Ruff lint
+        run: uv run ruff check packages/
+
+      - name: Ruff format
+        run: uv run ruff format --check packages/
+
+      - name: mypy
+        run: uv run mypy packages/fabrica/src/

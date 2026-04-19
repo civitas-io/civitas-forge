@@ -1,0 +1,53 @@
+[project]
+name = "fabrica"
+version = "0.1.0"
+description = "Selective tool retrieval gateway for LLM systems"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Jeryn Mathew Varghese" }]
+keywords = ["llm", "tools", "mcp", "agents", "gateway", "retrieval"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "civitas>=0.1.1",
+]
+
+[project.optional-dependencies]
+search = [
+    "sentence-transformers>=3.0",
+    "numpy>=1.26",
+]
+mcp = [
+    "mcp>=1.0",
+]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "mypy>=1.11",
+    "ruff>=0.8",
+]
+
+[project.urls]
+Homepage = "https://github.com/civitas-io/civitas-forge"
+Documentation = "https://civitas-io.github.io/civitas-forge/"
+Repository = "https://github.com/civitas-io/civitas-forge"
+Issues = "https://github.com/civitas-io/civitas-forge/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fabrica"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
