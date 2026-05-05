@@ -21,7 +21,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["fabrica"]
+known-first-party = ["fabrica", "civitas_contrib"]
 
 [tool.mypy]
 python_version = "3.12"

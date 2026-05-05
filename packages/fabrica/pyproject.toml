@@ -1,7 +1,7 @@
 [project]
 name = "fabrica"
 version = "0.1.0"
-description = "Selective tool retrieval gateway for LLM systems"
+description = "MCP tools gateway for Civitas — sandboxed subprocess execution and tool routing"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "Apache-2.0" }
@@ -17,7 +17,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "civitas>=0.1.1",
+    "civitas>=0.3",
 ]
 
 [project.optional-dependencies]
@@ -36,10 +36,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/civitas-io/civitas-forge"
-Documentation = "https://civitas-io.github.io/civitas-forge/"
-Repository = "https://github.com/civitas-io/civitas-forge"
-Issues = "https://github.com/civitas-io/civitas-forge/issues"
+Homepage = "https://github.com/civitas-io/civitas-contrib"
+Documentation = "https://civitas-io.github.io/civitas-contrib/"
+Repository = "https://github.com/civitas-io/civitas-contrib"
+Issues = "https://github.com/civitas-io/civitas-contrib/issues"
 
 [build-system]
 requires = ["hatchling"]
