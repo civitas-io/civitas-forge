@@ -23,11 +23,10 @@ def create_test_tracer() -> tuple[Any, Any]:
 
     Raises ImportError if opentelemetry-sdk is not installed.
     """
+    from civitas.observability.tracer import Tracer
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import SimpleSpanProcessor
     from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
-
-    from civitas.observability.tracer import Tracer
 
     exporter = InMemorySpanExporter()
     provider = TracerProvider()

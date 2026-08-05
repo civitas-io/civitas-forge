@@ -30,6 +30,8 @@ mistral    = ["mistralai>=1.0"]
 litellm    = ["litellm>=1.40"]
 langgraph  = ["langgraph>=0.1"]
 postgres   = ["asyncpg>=0.29"]
+# cryptography: aiomysql needs it for MySQL 8's default caching_sha2_password auth.
+mysql      = ["aiomysql>=0.2", "cryptography>=42"]
 otel       = ["opentelemetry-sdk>=1.20", "opentelemetry-exporter-otlp-proto-grpc>=1.20"]
 arize      = ["opentelemetry-sdk>=1.20", "opentelemetry-exporter-otlp-proto-grpc>=1.20"]
 langfuse   = ["langfuse>=2.0"]
@@ -44,6 +46,10 @@ dev = [
     "anthropic>=0.20",
     "opentelemetry-sdk>=1.20",
     "types-pyyaml>=6.0.12",
+    # Real-DB integration tests spin up Postgres/MySQL containers.
+    "testcontainers>=4.0",
+    "asyncpg>=0.29",
+    "aiomysql>=0.2",
 ]
 
 [project.urls]
@@ -61,3 +67,4 @@ packages = ["src/civitas_contrib"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+pythonpath = ["."]

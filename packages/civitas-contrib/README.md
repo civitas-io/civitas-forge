@@ -19,8 +19,11 @@ Each integration's third-party dependency is an **extra**, so you only install w
 |---|---|---|
 | **LLM provider plugins** | `anthropic`, `openai`, `gemini`, `mistral`, `litellm`, `fiddler` | matching extra (`[openai]`, …) |
 | **Framework adapters** | `adapters.crewai`, `adapters.langgraph`, `adapters.openai` | `[langgraph]`, … |
-| **State stores (driver-backed)** | `plugins.postgres_store` | `[postgres]` |
+| **State stores (driver-backed)** | `plugins.postgres_store`, `plugins.mysql_store` | `[postgres]`, `[mysql]` |
+| **Span stores (driver-backed)** | `plugins.postgres_span_store`, `plugins.mysql_span_store` | `[postgres]`, `[mysql]` |
 | **Exporters** | `plugins.otel`, `eval.exporters` | `[otel]`, `[arize]`, `[langfuse]`, `[braintrust]`, `[langsmith]` |
+
+The **span stores** implement civitas's `SpanStore` protocol (durable, queryable telemetry) and are usable as `plugins.exporters` of `type: postgres` / `type: mysql`. The **state stores** implement `StateStore` (`type: postgres` / `type: mysql` under `plugins.state`). Both reuse core's public `civitas.observability.normalize_span` and match core's `SQLiteSpanStore` query results exactly.
 
 ## Moved to core
 
