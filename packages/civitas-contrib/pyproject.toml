@@ -1,6 +1,6 @@
 [project]
 name = "civitas-contrib"
-version = "0.1.0"
+version = "0.2.0"
 description = "Community integrations and extras for Civitas — adapters, providers, eval exporters"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -17,7 +17,9 @@ classifiers = [
 ]
 
 dependencies = [
-    "civitas>=0.3",
+    # >=0.11.0: SQLiteStateStore moved to core (B4); the sqlite_store shim here
+    # re-exports it from civitas.plugins.sqlite_store.
+    "civitas>=0.11.0",
 ]
 
 [project.optional-dependencies]
