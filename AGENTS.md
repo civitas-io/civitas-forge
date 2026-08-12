@@ -17,7 +17,7 @@ Cross-cutting context (repo boundaries, positioning, roadmap) lives in the priva
 | Package | Import | PyPI | Purpose |
 |---|---|---|---|
 | `civitas-contrib` | `civitas_contrib` | `pip install civitas-contrib` | Provider plugins, framework adapters, eval exporters |
-| `fabrica` | `fabrica` | `pip install fabrica` | MCP tools gateway — sandboxed subprocess execution |
+| `fabrica` | `fabrica` | superseded — see `packages/fabrica/README.md` | MCP tools gateway — sandboxed subprocess execution. **Superseded by [`civitas-io/fabrica`](https://github.com/civitas-io/fabrica) (`pip install fabrica-context`)**; this package's code is migrating there, not maintained as a standalone package going forward. |
 
 Both packages depend on `civitas>=0.3` (one-way). They are **never imported by civitas
 core**. civitas-contrib and fabrica may not import from each other.
@@ -72,7 +72,7 @@ civitas-contrib/                      # repo root (uv workspace)
           exporters.py               # ArizeExporter, BraintrustExporter,
                                      #   FiddlerExporter, LangfuseExporter, LangSmithExporter
       tests/
-    fabrica/                          # pip install fabrica
+    fabrica/                          # SUPERSEDED -- migrating to civitas-io/fabrica (pip install fabrica-context)
       pyproject.toml
       src/fabrica/
         __init__.py
@@ -111,10 +111,10 @@ pip install civitas-contrib[langsmith]       # + LangSmith eval exporter
 pip install civitas-contrib[arize]           # + Arize eval exporter
 pip install civitas-contrib[fiddler]         # + Fiddler eval exporter
 
-# fabrica extras
-pip install fabrica                          # base (requires civitas)
-pip install fabrica[mcp]                     # + MCP protocol support (mcp>=1.0)
-pip install fabrica[search]                  # + semantic search (sentence-transformers)
+# fabrica extras -- SUPERSEDED, these commands never actually worked as
+# written (fabrica is taken on PyPI by an unrelated project). Kept here only
+# as a record of the original intent; use civitas-io/fabrica instead:
+#   pip install fabrica-context
 ```
 
 ---
@@ -300,7 +300,13 @@ class MyExporter:
 
 ---
 
-## MCP Gateway (fabrica)
+## MCP Gateway (fabrica) — SUPERSEDED, code accurate for now, home is moving
+
+> This code still works as documented below, but is migrating to
+> [`civitas-io/fabrica`](https://github.com/civitas-io/fabrica) as the
+> implementation behind that project's `MCPToolNamespace` (`pip install
+> fabrica-context`). Don't build new work against this package's location
+> long-term — treat this section as accurate-but-temporary.
 
 `MCPClient` manages a single MCP server as a subprocess. `MCPTool` wraps it as a
 `ToolProvider` for use with `ToolRegistry`.

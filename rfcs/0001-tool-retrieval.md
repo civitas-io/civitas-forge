@@ -1,9 +1,26 @@
 # RFC 0001 — Selective Tool Retrieval for LLM Systems
 
-**Status:** Draft
+**Status:** Superseded (2026-08) — see note below
 **Author:** Jeryn Mathew Varghese
 **Created:** 2026-04
-**Discussion:** *(to be submitted — MCP GitHub Discussions, Hacker News)*
+**Discussion:** *(never submitted — superseded before submission)*
+
+---
+
+> **Superseded.** This RFC proposed `find_tools` as Fabrica's headline
+> mechanism. A full discovery→design→validation cycle at
+> [`civitas-io/fabrica`](https://github.com/civitas-io/fabrica) reversed that:
+> **code-mode (tools-as-code, sandboxed execution) is the validated headline**
+> (measured ~79% cheaper *and* more correct than traditional tool-calling,
+> real spike evidence, not projected) — `find()` (this RFC's `find_tools`,
+> essentially) is the fallback for hosts that can't run code-mode, not the
+> primary interface. See
+> [`docs/tool-execution.md`](https://github.com/civitas-io/fabrica/blob/main/docs/tool-execution.md)
+> and
+> [`specs/archive/spikes/SPIKE-code-mode-execution.md`](https://github.com/civitas-io/fabrica/blob/main/specs/archive/spikes/SPIKE-code-mode-execution.md)
+> in the new repo. Distribution: `pip install fabrica-context`. Kept below,
+> unmodified, as the historical record of where this idea started — not as
+> a current proposal.
 
 ---
 
