@@ -7,8 +7,8 @@ from datetime import UTC
 from typing import Any
 
 from civitas.audit.types import AuditEvent, AuditSink
-from civitas.mcp.types import MCPServerConfig, MCPToolError, MCPToolSchema
 
+from fabrica.mcp.types import MCPServerConfig, MCPToolError, MCPToolSchema
 from fabrica.sandbox.bubblewrap import BubblewrapSandbox
 
 try:
