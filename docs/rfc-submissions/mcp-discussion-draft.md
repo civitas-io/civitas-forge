@@ -1,7 +1,18 @@
-# MCP Discussion submission draft
+# MCP Discussion submission draft — SUPERSEDED, never submitted
 
 **Target:** https://github.com/modelcontextprotocol/modelcontextprotocol/discussions/new
 **Category:** Ideas / RFC
+
+> **Superseded.** This entire draft is built on RFC 0001's original
+> `find_tools`-as-headline framing, which has since been reversed at
+> [`civitas-io/fabrica`](https://github.com/civitas-io/fabrica) — code-mode
+> (tools-as-code, sandboxed execution) is the validated headline mechanism;
+> `find_tools`/`find()` is the fallback. This draft was never actually
+> submitted to MCP Discussions (see RFC 0001's own updated status), so there
+> is no external audience to correct — kept here as a historical record of
+> the original idea, not as something to revise and send. If a real
+> MCP-facing submission is ever warranted, it should be written fresh
+> against the current design, not patched from this draft.
 
 ---
 
