@@ -6,11 +6,13 @@ from datetime import UTC
 from typing import TYPE_CHECKING, Any
 
 from civitas.audit.types import AuditEvent, AuditSink
+
 from fabrica.mcp.types import MCPToolSchema
 
 if TYPE_CHECKING:
-    from fabrica.mcp.client import MCPClient
     from civitas.observability.tracer import Tracer
+
+    from fabrica.mcp.client import MCPClient
 
 
 class MCPTool:
