@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [fabrica]
+        package: [civitas-contrib]
         python-version: ["3.12", "3.13", "3.14"]
 
     steps:
@@ -52,4 +52,4 @@ jobs:
         run: uv run ruff format --check packages/
 
       - name: mypy
-        run: uv run mypy packages/fabrica/src/
+        run: uv run mypy packages/civitas-contrib/src/

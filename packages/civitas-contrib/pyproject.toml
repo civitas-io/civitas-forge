@@ -27,7 +27,6 @@ anthropic  = ["anthropic>=0.20"]
 openai     = ["openai>=1.0"]
 gemini     = ["google-generativeai>=0.8"]
 mistral    = ["mistralai>=1.0"]
-litellm    = ["litellm>=1.40"]
 langgraph  = ["langgraph>=0.1"]
 postgres   = ["asyncpg>=0.29"]
 # cryptography: aiomysql needs it for MySQL 8's default caching_sha2_password auth.
@@ -37,6 +36,8 @@ arize      = ["opentelemetry-sdk>=1.20", "opentelemetry-exporter-otlp-proto-grpc
 langfuse   = ["langfuse>=2.0"]
 braintrust = ["braintrust>=0.0.100"]
 langsmith  = ["langsmith>=0.1"]
+# fiddler-client backs eval.exporters.FiddlerExporter, not a model provider —
+# there is no civitas_contrib.plugins.fiddler.
 fiddler    = ["fiddler-client>=3.0"]
 dev = [
     "pytest>=8",
@@ -44,6 +45,7 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
     "anthropic>=0.20",
+    "openai>=1.0",
     "opentelemetry-sdk>=1.20",
     "types-pyyaml>=6.0.12",
     # Real-DB integration tests spin up Postgres/MySQL containers.

@@ -1,3 +1,22 @@
+[project]
+name = "civitas-contrib-workspace"
+version = "0.1.0"
+description = "Community integrations and extras for Civitas — workspace root"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+authors = [{ name = "Jeryn Mathew Varghese" }]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["_nonexistent"]
+
+[tool.uv.sources]
+civitas-contrib = { workspace = true }
+
 [tool.uv.workspace]
 members = ["packages/*"]
 
@@ -21,20 +40,47 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["fabrica", "civitas_contrib"]
+known-first-party = ["civitas_contrib"]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
 
 [[tool.mypy.overrides]]
-# mcp is an OPTIONAL runtime dependency of packages/fabrica (fabrica[mcp]),
-# guarded by a try/except ImportError at import time (fabrica/mcp/client.py's
-# _HAS_MCP flag) -- CI intentionally does not install every optional extra
-# for every package, so mypy has no stubs to resolve this against. Ignoring
-# missing imports here is the correct match for an optional dependency, not
-# a workaround: forcing CI to install every current and future optional
-# extra just to satisfy mypy would couple CI to a package's whole
-# optional-dependency surface, not just its required one.
-module = "mcp.*"
+# Optional third-party SDKs behind civitas-contrib's own extras — each import
+# is guarded by a try/except ImportError at runtime (see e.g.
+# plugins/anthropic.py's _HAS_ANTHROPIC flag). CI intentionally does not
+# install every extra for every run, so mypy has no stubs to resolve these
+# against. Matches the identical, established precedent in
+# civitas-io/python-civitas's own root pyproject.toml.
+module = [
+    "openai",
+    "openai.*",
+    "google",
+    "google.*",
+    "mistralai",
+    "mistralai.*",
+    "agents",
+    "agents.*",
+    "asyncpg",
+    "asyncpg.*",
+    "aiomysql",
+    "aiomysql.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Eval exporter SDKs: optional installs, no stubs bundled with the packages.
+module = [
+    "langfuse",
+    "langfuse.*",
+    "braintrust",
+    "braintrust.*",
+    "langsmith",
+    "langsmith.*",
+    "fiddler",
+    "fiddler.*",
+    "opentelemetry",
+    "opentelemetry.*",
+]
 ignore_missing_imports = true

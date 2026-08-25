@@ -12,29 +12,40 @@ Cross-cutting context (repo boundaries, positioning, roadmap) lives in the priva
 
 ## Project Overview
 
-`civitas-contrib` is a **uv workspace monorepo** containing two packages:
+`civitas-contrib` is a **uv workspace monorepo** containing one distributable package:
 
 | Package | Import | PyPI | Purpose |
 |---|---|---|---|
-| `civitas-contrib` | `civitas_contrib` | `pip install civitas-contrib` | Provider plugins, framework adapters, eval exporters |
-| `fabrica` | `fabrica` | superseded — see `packages/fabrica/README.md` | MCP tools gateway — sandboxed subprocess execution. **Superseded by [`civitas-io/fabrica`](https://github.com/civitas-io/fabrica) (`pip install fabrica-context`)**; this package's code is migrating there, not maintained as a standalone package going forward. |
+| `civitas-contrib` | `civitas_contrib` | `pip install civitas-contrib` | Provider plugins, framework adapters, driver-backed state/span stores, eval exporters |
 
-Both packages depend on `civitas>=0.3` (one-way). They are **never imported by civitas
-core**. civitas-contrib and fabrica may not import from each other.
+Depends on `civitas>=0.11.0` (one-way). Never imported by civitas core.
 
 This is the fast-iteration layer. civitas core is deliberately conservative; this
 package is where integrations live and where breaking changes from upstream SDKs
-(Anthropic, LangGraph, MCP, etc.) are absorbed.
+(Anthropic, OpenAI, LangGraph, etc.) are absorbed.
+
+**Note on scope**: this repo used to also host a `fabrica` package (an MCP tools
+gateway). It outgrew this repo and became its own platform pillar,
+[`civitas-io/fabrica`](https://github.com/civitas-io/fabrica) (`pip install
+fabrica-context`) — the real code was migrated there (with real improvements:
+`BubblewrapSandbox` replaced by cross-platform `srt`) and the package has been
+removed from this repo. `docs/design/fabrica.md` and `rfcs/0001-tool-retrieval.md`
+remain as the historical design record, both marked superseded.
 
 ---
 
 ## Org Structure
 
+Five real projects as of the `civitas-io/context` repo's ADR-003 (2026-08-22),
+superseding the earlier three-repo picture:
+
 | Repo | Import | Contains |
 |---|---|---|
 | `civitas-io/python-civitas` | `civitas` | Core runtime — process, supervisor, message bus, transport |
-| `civitas-io/civitas-contrib` | `civitas_contrib`, `fabrica` | This repo |
-| `civitas-io/presidium` | `presidium` | Governance — policy, registry, audit |
+| `civitas-io/civitas-contrib` | `civitas_contrib` | This repo — integrations, narrower in scope now that Fabrica has its own repo |
+| `civitas-io/presidium` | `presidium`, `presidium-contrib` | Governance — policy, registry, audit |
+| `civitas-io/fabrica` | `fabrica` (PyPI: `fabrica-context`) | Context layer — tools-as-code, sandboxed execution, skills, memory, prompts |
+| `civitas-io/prx`, `civitas-io/tessera` | — | Standalone ecosystem tools, not platform pillars |
 
 **Dependency rule:** civitas-contrib → civitas. Never import back into civitas.
 civitas and civitas-contrib must never form a circular dependency.
@@ -50,6 +61,7 @@ civitas-contrib/                      # repo root (uv workspace)
     civitas-contrib/                  # pip install civitas-contrib
       pyproject.toml
       src/civitas_contrib/
+        py.typed
         __init__.py
         plugins/
           __init__.py
@@ -57,35 +69,26 @@ civitas-contrib/                      # repo root (uv workspace)
           openai.py                  # OpenAIProvider
           gemini.py                  # GeminiProvider
           mistral.py                 # MistralProvider
-          litellm.py                 # LiteLLMProvider
-          otel.py                    # OTELExporter
-          sqlite_store.py            # SQLiteStateStore
+          litellm.py                 # LiteLLMProvider — placeholder, raises NotImplementedError
+          otel.py                    # OTEL helper functions (create_test_tracer) — not a class exporter
+          sqlite_store.py            # deprecating re-export shim -> civitas.plugins.sqlite_store
           postgres_store.py          # PostgresStateStore
-          fiddler.py                 # FiddlerExporter (eval)
+          postgres_span_store.py     # PostgresSpanStore
+          mysql_store.py             # MySQLStateStore
+          mysql_span_store.py        # MySQLSpanStore
         adapters/
           __init__.py
           langgraph.py               # LangGraphAgent
           openai.py                  # OpenAIAgent
-          crewai.py                  # CrewAIAgent (stub)
+          crewai.py                  # CrewAIAgent — placeholder, raises NotImplementedError
         eval/
           __init__.py
           exporters.py               # ArizeExporter, BraintrustExporter,
                                      #   FiddlerExporter, LangfuseExporter, LangSmithExporter
       tests/
-    fabrica/                          # SUPERSEDED -- migrating to civitas-io/fabrica (pip install fabrica-context)
-      pyproject.toml
-      src/fabrica/
-        __init__.py
-        mcp/
-          __init__.py
-          client.py                  # MCPClient — manages MCP server subprocess
-          tool.py                    # MCPTool — wraps MCPClient as ToolProvider
-          types.py                   # MCPServerConfig, MCPToolSchema
-        sandbox/
-          __init__.py
-          config.py                  # SandboxConfig, FilesystemMount (re-exported from civitas)
-          bubblewrap.py              # BubblewrapSandbox — Linux bubblewrap isolation
-      tests/
+        unit/                        # mocked SDK clients, no network — anthropic/openai covered
+        test_postgres_backends.py    # real Postgres via testcontainers
+        test_mysql_backends.py       # real MySQL via testcontainers
   docs/
   rfcs/
 ```
@@ -95,27 +98,25 @@ civitas-contrib/                      # repo root (uv workspace)
 ## Install
 
 ```bash
-# civitas-contrib extras
 pip install civitas-contrib                  # base (requires civitas)
 pip install civitas-contrib[anthropic]       # + Anthropic Claude
-pip install civitas-contrib[openai]          # + OpenAI GPT-4o / o-series + Agents SDK
+pip install civitas-contrib[openai]          # + OpenAI GPT-4o / o-series + Agents SDK + OpenAI-compatible endpoints
 pip install civitas-contrib[gemini]          # + Google Gemini
 pip install civitas-contrib[mistral]         # + Mistral
-pip install civitas-contrib[litellm]         # + LiteLLM (100+ models)
 pip install civitas-contrib[langgraph]       # + LangGraph adapter
-pip install civitas-contrib[postgres]        # + PostgreSQL state store (asyncpg)
-pip install civitas-contrib[otel]            # + OTEL eval exporter
+pip install civitas-contrib[postgres]        # + PostgreSQL state/span store (asyncpg)
+pip install civitas-contrib[mysql]           # + MySQL state/span store (aiomysql)
+pip install civitas-contrib[otel]            # + OTEL test-tracer helpers
 pip install civitas-contrib[langfuse]        # + Langfuse eval exporter
 pip install civitas-contrib[braintrust]      # + Braintrust eval exporter
 pip install civitas-contrib[langsmith]       # + LangSmith eval exporter
 pip install civitas-contrib[arize]           # + Arize eval exporter
-pip install civitas-contrib[fiddler]         # + Fiddler eval exporter
-
-# fabrica extras -- SUPERSEDED, these commands never actually worked as
-# written (fabrica is taken on PyPI by an unrelated project). Kept here only
-# as a record of the original intent; use civitas-io/fabrica instead:
-#   pip install fabrica-context
+pip install civitas-contrib[fiddler]         # + Fiddler eval exporter (eval.exporters.FiddlerExporter)
 ```
+
+There is no `[litellm]` extra — `plugins.litellm.LiteLLMProvider` is a `NotImplementedError`
+placeholder that doesn't touch the `litellm` SDK yet, so no extra is declared for it (same
+pattern as `adapters.crewai.CrewAIAgent`).
 
 ---
 
@@ -127,15 +128,18 @@ from civitas_contrib.plugins.anthropic import AnthropicProvider
 from civitas_contrib.plugins.openai import OpenAIProvider
 from civitas_contrib.plugins.gemini import GeminiProvider
 from civitas_contrib.plugins.mistral import MistralProvider
-from civitas_contrib.plugins.litellm import LiteLLMProvider
+# from civitas_contrib.plugins.litellm import LiteLLMProvider  # raises NotImplementedError
 
-# State stores
-from civitas_contrib.plugins.sqlite_store import SQLiteStateStore
+# State/span stores
 from civitas_contrib.plugins.postgres_store import PostgresStateStore
+from civitas_contrib.plugins.postgres_span_store import PostgresSpanStore
+from civitas_contrib.plugins.mysql_store import MySQLStateStore
+from civitas_contrib.plugins.mysql_span_store import MySQLSpanStore
 
 # Framework adapters
 from civitas_contrib.adapters.langgraph import LangGraphAgent
 from civitas_contrib.adapters.openai import OpenAIAgent
+# from civitas_contrib.adapters.crewai import CrewAIAgent  # raises NotImplementedError
 
 # Eval exporters
 from civitas_contrib.eval.exporters import (
@@ -145,16 +149,11 @@ from civitas_contrib.eval.exporters import (
     LangfuseExporter,
     LangSmithExporter,
 )
-
-# MCP gateway
-from fabrica.mcp.client import MCPClient
-from fabrica.mcp.tool import MCPTool
-from fabrica.mcp.types import MCPServerConfig, MCPToolSchema
-
-# Sandbox
-from fabrica.sandbox.bubblewrap import BubblewrapSandbox
-from fabrica.sandbox.config import SandboxConfig, FilesystemMount
 ```
+
+`OpenAIProvider` also covers any OpenAI-compatible endpoint via `base_url=` — Ollama, a
+self-hosted deployment, or a third-party OpenAI-compatible API — no separate provider class
+exists or is needed for those.
 
 ---
 
@@ -166,12 +165,11 @@ This workspace uses **`uv`** with workspace support.
 # Install uv if not present
 curl -Ls https://astral.sh/uv/install.sh | sh
 
-# Sync the entire workspace (all packages)
-uv sync --all-extras
+# Sync the workspace
+uv sync --package civitas-contrib --all-extras
 
-# Run tests for a specific package
+# Run tests
 uv run --package civitas-contrib pytest packages/civitas-contrib/tests/
-uv run --package fabrica pytest packages/fabrica/tests/
 ```
 
 ### Environment variables
@@ -197,18 +195,16 @@ Never read `os.environ` directly — use the provider's own config pattern or
 
 | Task | Command |
 |---|---|
-| Sync all packages | `uv sync --all-extras` |
-| Run civitas-contrib tests | `uv run pytest packages/civitas-contrib/tests/` |
-| Run fabrica tests | `uv run pytest packages/fabrica/tests/` |
-| Lint all | `uv run ruff check .` |
-| Format all | `uv run ruff format .` |
-| Type-check civitas-contrib | `uv run mypy packages/civitas-contrib/src/` |
-| Type-check fabrica | `uv run mypy packages/fabrica/src/` |
+| Sync | `uv sync --package civitas-contrib --all-extras` |
+| Run tests | `uv run --package civitas-contrib pytest packages/civitas-contrib/tests/` |
+| Lint all | `uv run ruff check packages/` |
+| Format all | `uv run ruff format packages/` |
+| Type-check | `uv run mypy packages/civitas-contrib/src/` |
 
 Run before finishing any task:
 
 ```bash
-uv run ruff check . && uv run ruff format . && uv run pytest
+uv run ruff check packages/ && uv run ruff format --check packages/ && uv run pytest packages/civitas-contrib/tests/
 ```
 
 ---
@@ -250,6 +246,14 @@ class MyProvider:
   so `type: myprovider` works in topology YAML.
 - Keep SDK calls async — never use sync SDK methods.
 - Handle `429` / rate limit errors at the provider level, not in AgentProcess.
+- Guard the SDK import with try/except at module level (see `plugins/anthropic.py`'s
+  `_HAS_ANTHROPIC` pattern) so `import civitas_contrib.plugins.<x>` never fails when the
+  extra isn't installed — only constructing the provider should raise.
+- Write real unit tests with the SDK client mocked (`unittest.mock.AsyncMock` on the
+  client's own call method) — see `tests/unit/test_anthropic.py`/`test_openai.py` for the
+  established pattern. Not implemented yet? Raise `NotImplementedError` on `__init__` with a
+  clear message and a link to track progress (see `plugins/litellm.py`/`adapters/crewai.py`) —
+  do not declare an extra for a provider with no real code behind it.
 
 ---
 
@@ -300,58 +304,23 @@ class MyExporter:
 
 ---
 
-## MCP Gateway (fabrica) — SUPERSEDED, code accurate for now, home is moving
-
-> This code still works as documented below, but is migrating to
-> [`civitas-io/fabrica`](https://github.com/civitas-io/fabrica) as the
-> implementation behind that project's `MCPToolNamespace` (`pip install
-> fabrica-context`). Don't build new work against this package's location
-> long-term — treat this section as accurate-but-temporary.
-
-`MCPClient` manages a single MCP server as a subprocess. `MCPTool` wraps it as a
-`ToolProvider` for use with `ToolRegistry`.
-
-```python
-from fabrica.mcp.client import MCPClient
-from fabrica.mcp.tool import MCPTool
-from fabrica.mcp.types import MCPServerConfig
-from civitas.plugins.tools import ToolRegistry
-
-config = MCPServerConfig(
-    command="npx",
-    args=["-y", "@modelcontextprotocol/server-filesystem", "/data"],
-)
-
-async def setup_tools() -> ToolRegistry:
-    client = MCPClient(config)
-    await client.start()
-    registry = ToolRegistry()
-    for tool_schema in await client.list_tools():
-        registry.register(MCPTool(client, tool_schema))
-    return registry
-```
-
-`BubblewrapSandbox` (Linux only) runs the MCP subprocess inside a bubblewrap
-container with filesystem restrictions defined by `SandboxConfig`.
-
----
-
 ## Code Style
 
 Same as civitas core — `ruff` for lint and format, mypy strict, 100-char lines,
 Google-style docstrings, `from __future__ import annotations` at top of every module.
 
-Plugin files may disable specific mypy rules where upstream SDKs have poor typing
-(see `pyproject.toml` `[[tool.mypy.overrides]]` for the established pattern).
+Plugin files may disable specific mypy rules where upstream SDKs have poor typing —
+see the root `pyproject.toml`'s `[[tool.mypy.overrides]]` blocks for the established,
+per-optional-dependency pattern (mirrors `civitas-io/python-civitas`'s own root
+`pyproject.toml` exactly).
 
 ---
 
 ## Dependency Rules
 
-1. civitas-contrib and fabrica may import from `civitas` freely.
-2. civitas-contrib and fabrica must **never** import from each other.
-3. civitas core must **never** import from civitas-contrib or fabrica at module top.
-4. Optional SDK imports (anthropic, langfuse, etc.) must be guarded in `__init__`
+1. civitas-contrib may import from `civitas` freely.
+2. civitas core must **never** import from civitas-contrib at module top.
+3. Optional SDK imports (anthropic, openai, langfuse, etc.) must be guarded in `__init__`
    or at first use — never at module top — so `import civitas_contrib` does not
    fail when the optional extra is not installed.
 
@@ -376,18 +345,22 @@ class AnthropicProvider:
 
 ## Testing
 
-- Unit tests: `packages/<name>/tests/unit/` — no network, no API keys, mock SDK clients.
-- Integration tests: `packages/<name>/tests/integration/` — require real API keys.
-- Coverage target: ≥ 80% per package (integration tests excluded from CI).
+- Unit tests: `packages/civitas-contrib/tests/unit/` — no network, no API keys, mock SDK clients.
+- Integration tests: `packages/civitas-contrib/tests/test_postgres_backends.py` /
+  `test_mysql_backends.py` — real Postgres/MySQL via `testcontainers`, require Docker.
 - Test file names mirror source: `plugins/anthropic.py` → `tests/unit/test_anthropic.py`.
+- **Real, current gap, not hidden**: `plugins/gemini.py`, `plugins/mistral.py`,
+  `adapters/langgraph.py`, `adapters/openai.py`, and `eval/exporters.py` have real,
+  working implementations but no unit tests yet — only `plugins/anthropic.py` and
+  `plugins/openai.py` are unit-tested so far. Worth closing next, not assumed covered.
 
 ---
 
 ## Pull Request Checklist
 
-- [ ] `uv run ruff check .` passes
-- [ ] `uv run ruff format .` produces no diff
-- [ ] `uv run mypy packages/<name>/src/` passes
+- [ ] `uv run ruff check packages/` passes
+- [ ] `uv run ruff format --check packages/` produces no diff
+- [ ] `uv run mypy packages/civitas-contrib/src/` passes
 - [ ] Unit tests pass
 - [ ] New provider registered in `civitas/plugins/loader.py` `_BUILTINS` (if applicable)
 - [ ] Optional import properly guarded

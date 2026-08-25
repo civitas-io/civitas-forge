@@ -15,13 +15,21 @@ Each integration's third-party dependency is an **extra**, so you only install w
 
 ## What's inside
 
-| Category | Modules | Extra |
-|---|---|---|
-| **LLM provider plugins** | `anthropic`, `openai`, `gemini`, `mistral`, `litellm`, `fiddler` | matching extra (`[openai]`, …) |
-| **Framework adapters** | `adapters.crewai`, `adapters.langgraph`, `adapters.openai` | `[langgraph]`, … |
-| **State stores (driver-backed)** | `plugins.postgres_store`, `plugins.mysql_store` | `[postgres]`, `[mysql]` |
-| **Span stores (driver-backed)** | `plugins.postgres_span_store`, `plugins.mysql_span_store` | `[postgres]`, `[mysql]` |
-| **Exporters** | `plugins.otel`, `eval.exporters` | `[otel]`, `[arize]`, `[langfuse]`, `[braintrust]`, `[langsmith]` |
+| Category | Modules | Extra | Status |
+|---|---|---|---|
+| **LLM provider plugins** | `plugins.anthropic`, `plugins.openai`, `plugins.gemini`, `plugins.mistral` | matching extra (`[anthropic]`, `[openai]`, `[gemini]`, `[mistral]`) | Real, unit-tested (`anthropic`/`openai`) |
+| **Framework adapters** | `adapters.langgraph`, `adapters.openai` | `[langgraph]`, `[openai]` | Real |
+| **State stores (driver-backed)** | `plugins.postgres_store`, `plugins.mysql_store` | `[postgres]`, `[mysql]` | Real, integration-tested against real Postgres/MySQL |
+| **Span stores (driver-backed)** | `plugins.postgres_span_store`, `plugins.mysql_span_store` | `[postgres]`, `[mysql]` | Real, integration-tested against real Postgres/MySQL |
+| **Exporters** | `plugins.otel`, `eval.exporters` (`ArizeExporter`, `LangfuseExporter`, `BraintrustExporter`, `LangSmithExporter`, `FiddlerExporter`) | `[otel]`, `[arize]`, `[langfuse]`, `[braintrust]`, `[langsmith]`, `[fiddler]` | Real |
+
+**Not yet implemented, honest placeholders only** — importable, but raise `NotImplementedError` on
+instantiation with a link to track progress, matching the same pattern for both:
+
+- `adapters.crewai.CrewAIAgent` — no extra needed (doesn't touch the `crewai` SDK yet).
+- `plugins.litellm.LiteLLMProvider` — no extra needed (doesn't touch the `litellm` SDK yet).
+
+There is no `civitas_contrib.plugins.fiddler` module — `[fiddler]` backs `eval.exporters.FiddlerExporter` (an eval exporter), not a model provider.
 
 The **span stores** implement civitas's `SpanStore` protocol (durable, queryable telemetry) and are usable as `plugins.exporters` of `type: postgres` / `type: mysql`. The **state stores** implement `StateStore` (`type: postgres` / `type: mysql` under `plugins.state`). Both reuse core's public `civitas.observability.normalize_span` and match core's `SQLiteSpanStore` query results exactly.
 

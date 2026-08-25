@@ -27,16 +27,17 @@ both directions of MCP integration, none of which exist here at all.
   or [`HANDOFF.md`](https://github.com/civitas-io/fabrica/blob/main/HANDOFF.md)
   for the current implementation status.
 
-**What actually happens to the code in `packages/fabrica/` in *this* repo**
-(a real, working `MCPClient` + `BubblewrapSandbox` — not this design doc's
-sketch): it migrates into `civitas-io/fabrica`, close to its current shape,
-as the implementation behind that project's `MCPToolNamespace`.
-`BubblewrapSandbox` specifically does **not** migrate as-is — it gets
-replaced by `srt` (a cross-platform tool unifying `bwrap` on Linux and
-`sandbox-exec` on macOS), since carrying over the Linux-only sandbox would
-reintroduce a platform gap the real design already closed. See
+**What happened to the code that used to live at `packages/fabrica/` in *this*
+repo** (a real, working `MCPClient` + `BubblewrapSandbox` — not this design
+doc's sketch): it migrated into `civitas-io/fabrica`, close to its original
+shape, as the implementation behind that project's `MCPToolNamespace`.
+`BubblewrapSandbox` specifically did **not** migrate as-is — it was replaced
+by `srt` (a cross-platform tool unifying `bwrap` on Linux and `sandbox-exec`
+on macOS), since carrying over the Linux-only sandbox would have reintroduced
+a platform gap the real design already closed. See
 [`docs/mcp-integration.md`](https://github.com/civitas-io/fabrica/blob/main/docs/mcp-integration.md)
-in the new repo for the full reasoning.
+in the new repo for the full reasoning. The migration is now complete and
+`packages/fabrica/` has been removed from this repo entirely.
 
 This document is kept, unmodified below the line, as a historical record of
 where the idea started — not as a spec to build against.
