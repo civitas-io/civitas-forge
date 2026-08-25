@@ -2,12 +2,21 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: trim-trailing-whitespace
+      - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+        args: [--unsafe]
       - id: check-toml
       - id: check-merge-conflict
       - id: check-added-large-files
+        args: [--maxkb=500]
+        # uv.lock is legitimately large (543 KB here; sibling repos'
+        # equivalents are 358-603 KB) and expected to stay that way -- this
+        # is the first time it's a newly-added file in this repo, so it's
+        # the only one that would ever trip this check (git commit
+        # afterward is a modification, not an add).
+        exclude: ^uv\.lock$
+      - id: debug-statements
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.6
@@ -16,9 +25,64 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
     hooks:
-      - id: mypy
-        files: ^packages/
-        additional_dependencies: [types-all]
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      # NOTE, tried and deliberately reverted 2026-08-25: a `uv lock --check`
+      # (or `uv sync --locked`) hook here would be the obvious way to catch
+      # pyproject.toml/uv.lock drift before mypy/tests even run -- exactly
+      # the class of bug found this session (workspace root pyproject.toml
+      # had no requires-python, so `uv sync` failed outright for anyone
+      # resolving from scratch). Not included: both commands must re-resolve
+      # from the real index to check freshness, and that always collides
+      # with this machine's local `fiddler-supply-chain-protection`
+      # exclude-newer policy (~/.config/uv/uv.toml, MDM-refreshed) whenever
+      # a floor like `civitas>=0.11.0` was published after its rolling
+      # cutoff -- confirmed directly, reproducible, not intermittent. It
+      # would report a false failure on every commit until the policy's
+      # window catches up, on every machine carrying that same MDM policy --
+      # not a useful local gate. uv.lock is still committed (matches
+      # python-civitas/presidium/fabrica's own convention) so the --frozen
+      # hooks below have something real to check against; CI (no such local
+      # policy) is the real backstop for lock/pyproject drift.
+      - id: mypy-civitas-contrib
+        name: mypy (civitas-contrib)
+        # --frozen: use the committed uv.lock as-is -- without it, a plain
+        # `uv run` can trigger a real lockfile re-resolution as a side
+        # effect of running the hook, which pre-commit then reports as a
+        # false "Failed" (files were modified), even when mypy itself
+        # passes cleanly. Same reasoning as presidium's own identical hook.
+        #
+        # Runs against the real, installed civitas-contrib env (civitas +
+        # dev-extra SDKs), not a generic mirrors-mypy + types-all hook --
+        # that generic form was this repo's previous setup and does not
+        # see civitas/anthropic/openai/etc. at all, so it can't actually
+        # reproduce what CI's `uv run mypy packages/civitas-contrib/src/`
+        # sees. Confirmed directly: CI's own lint job hit 21 real
+        # import-not-found errors (civitas.*, anthropic) the day this repo's
+        # `uv sync` step was fixed to actually install civitas-contrib's own
+        # deps -- exactly the class of gap this hook exists to catch before
+        # a push, not just discover after CI runs.
+        entry: uv run --frozen --package civitas-contrib mypy packages/civitas-contrib/src/
+        language: system
+        pass_filenames: false
+        files: ^packages/civitas-contrib/src/
+        types: [python]
+
+      - id: tests-civitas-contrib
+        name: tests (civitas-contrib)
+        # unit/ only, deliberately -- test_postgres_backends.py/
+        # test_mysql_backends.py need real Postgres/MySQL via testcontainers
+        # (Docker), which would make every push fail hard whenever Docker
+        # isn't running locally. Those two still run in CI on every push;
+        # this hook is the fast, always-available local gate.
+        entry: uv run --frozen --package civitas-contrib pytest packages/civitas-contrib/tests/unit -x -q --no-header --tb=line
+        language: system
+        pass_filenames: false
+        files: ^packages/civitas-contrib/
+        types: [python]
+        stages: [pre-push]
