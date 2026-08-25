@@ -51,7 +51,11 @@ dev = [
     # Real-DB integration tests spin up Postgres/MySQL containers.
     "testcontainers>=4.0",
     "asyncpg>=0.29",
+    # cryptography: aiomysql needs it for MySQL 8's default caching_sha2_password
+    # auth -- same reasoning as the mysql extra above; dev needs both to actually
+    # run test_mysql_backends.py, not just aiomysql.
     "aiomysql>=0.2",
+    "cryptography>=42",
 ]
 
 [project.urls]
